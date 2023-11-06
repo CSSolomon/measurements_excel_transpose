@@ -9,6 +9,7 @@ import pandas as pd
 split_value = "Filename"
 header_df = "header"
 values_df = "values"
+aggregates_key = "Aggregates"
 
 
 def existing_file(filename: str) -> pathlib.Path:
@@ -95,11 +96,15 @@ def transpose_split_excels(split_excels: dict) -> pd.DataFrame:
         if not df.index.name == split_value:
             continue
         for injection in df.index.values:
-            working_list = transposed_sheet_dict.setdefault(metabolite, {})
             area = df.loc[injection]["Area"]
             rt = df.loc[injection]["RT"]
-            working_list.append({f"{injection}_RT": rt, f"{injection}_Area": area})
 
+            areas_dict = transposed_sheet_dict.setdefault(f"{injection}_Area", {})
+            rts_dict = transposed_sheet_dict.setdefault(f"{injection}_RT", {})
+            rts_dict[metabolite] = rt
+            areas_dict[metabolite] = area
+
+    # pprint(transposed_sheet_dict)
     return pd.DataFrame(transposed_sheet_dict)
 
 
@@ -110,7 +115,7 @@ def save_excel(excel: dict, filename: pathlib.Path) -> None:
     """
     with pd.ExcelWriter(filename) as writer:
         for sheet_name, df in excel.items():
-            df.to_excel(writer, sheet_name=sheet_name)
+            df.to_excel(writer, sheet_name=sheet_name, float_format="%f")
 
 
 def main():
@@ -122,7 +127,8 @@ def main():
     clean_excel = cleanup_contents(excel)
     split_excel = split_excels(clean_excel)
     transposed_excel = transpose_split_excels(split_excel)
-    print(transposed_excel.to_string())
+    excel[aggregates_key] = transposed_excel
+    save_excel(excel, args.output)
 
 
 if __name__ == "__main__":
