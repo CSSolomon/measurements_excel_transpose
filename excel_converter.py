@@ -2,8 +2,11 @@
 import argparse
 import pathlib
 
-from pprint import pprint
 import pandas as pd
+
+# TODO
+# * Add formulas
+# * Add logging
 
 # What value signifies the second part of the values, after the header
 split_value = "Filename"
@@ -30,7 +33,13 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-f", "--filename", required=True, type=existing_file, help="The input file to parse")
-    parser.add_argument("-o", "--output", required=True, help="The file to output results into")
+    parser.add_argument("-o", "--output", default="", help="The file to output results into")
+    parser.add_argument(
+        "-l",
+        "--nor-leucine-key",
+        default="Nor",
+        help="The name of the sheet containing the Nor-Leucine data",
+    )
     return parser.parse_args()
 
 
@@ -47,7 +56,9 @@ def cleanup_contents(excel: dict, ignore_index: bool = True) -> dict:
         df = value
         df = df.replace(to_replace=" ", value=float("nan"))
         df = df.dropna(axis=0, how="all", ignore_index=ignore_index).dropna(
-            axis=1, how="all", ignore_index=ignore_index
+            axis=1,
+            how="all",
+            ignore_index=ignore_index,
         )
         clean_excel[key] = df
     return clean_excel
@@ -83,14 +94,28 @@ def split_excels(excel: dict) -> dict:
     return split_excel
 
 
-def transpose_split_excels(split_excels: dict) -> pd.DataFrame:
+def get_nor_leucine(split_excels: dict, nor_leucine_key: str) -> dict:
+    """@brief Gets Nor-Leucine data
+
+    @param[in]  split_excels    Dictionary with split excels, as found in previous format
+    @param[in]  nor_leucine_key The key (name) used for the nor_leucine sheet
+
+    @return nor_leucine     dict containing injection:quantity key:value pairs
+    """
+    df = split_excels[nor_leucine_key][values_df]
+    return df["Area"].to_dict()
+
+
+def transpose_split_excels(split_excels: dict, args: argparse.Namespace) -> pd.DataFrame:
     """@brief Transpose the split excels, as per profile
 
     @param[in]  split_excel   Dictionary with split excels, as found in previous format
+    @param[in]  args          argparse.Namespace    Parsed CLI arguments
 
     @return transposed_excel_shet     DataFrame with the contents of the transposed information sheet
     """
     transposed_sheet_dict = {}
+    get_nor_leucine(split_excels, args.nor_leucine_key)
     for metabolite, values in split_excels.items():
         df = values[values_df]
         if not df.index.name == split_value:
@@ -99,13 +124,26 @@ def transpose_split_excels(split_excels: dict) -> pd.DataFrame:
             area = df.loc[injection]["Area"]
             rt = df.loc[injection]["RT"]
 
+            rts_dict = transposed_sheet_dict.setdefault(f"RT", {})
             areas_dict = transposed_sheet_dict.setdefault(f"{injection}_Area", {})
-            rts_dict = transposed_sheet_dict.setdefault(f"{injection}_RT", {})
             rts_dict[metabolite] = rt
             areas_dict[metabolite] = area
 
-    # pprint(transposed_sheet_dict)
     return pd.DataFrame(transposed_sheet_dict)
+
+
+def insert_formulas(sheet: pd.DataFrame) -> pd.DataFrame:
+    """@brief Inserts the formula columns in the sheet
+
+    @param[in] sheet pandas.DataFrame object with the transposed data
+
+    @return sheet_with_formulas The datasheet with formulas added
+    """
+    df = sheet
+    col = 6 * ["form"]
+    for i in range(len(df.columns), 1, -1):
+        df.insert(i, str(i), col)
+    return df
 
 
 def save_excel(excel: dict, filename: pathlib.Path) -> None:
@@ -126,9 +164,12 @@ def main():
     excel = pd.read_excel(args.filename, sheet_name=None)
     clean_excel = cleanup_contents(excel)
     split_excel = split_excels(clean_excel)
-    transposed_excel = transpose_split_excels(split_excel)
+    transposed_excel = transpose_split_excels(split_excel, args)
     excel[aggregates_key] = transposed_excel
-    save_excel(excel, args.output)
+    if args.output:
+        save_excel(excel, args.output)
+    else:
+        print(excel[aggregates_key])
 
 
 if __name__ == "__main__":
