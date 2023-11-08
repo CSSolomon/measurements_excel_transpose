@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import argparse
+import itertools
 import pathlib
+import string
 
 import pandas as pd
 
@@ -13,6 +15,18 @@ split_value = "Filename"
 header_df = "header"
 values_df = "values"
 aggregates_key = "Aggregates"
+formulas_key = "Aggregates_formulas"
+
+templates = {
+    "remote_sheet_pointer": "{sheet}!{column}{row}",
+}
+
+# Get the keys for the first 728 excel columns (27 * 27 elements = 729 - 1) The removed element is the first, '', that
+# is an artifact of the multiplication
+excel_columns = [
+    "".join(x).strip()
+    for x in (itertools.product(list(" " + string.ascii_uppercase), list(" " + string.ascii_uppercase)))
+][1:]
 
 
 def existing_file(filename: str) -> pathlib.Path:
@@ -94,28 +108,14 @@ def split_excels(excel: dict) -> dict:
     return split_excel
 
 
-def get_nor_leucine(split_excels: dict, nor_leucine_key: str) -> dict:
-    """@brief Gets Nor-Leucine data
-
-    @param[in]  split_excels    Dictionary with split excels, as found in previous format
-    @param[in]  nor_leucine_key The key (name) used for the nor_leucine sheet
-
-    @return nor_leucine     dict containing injection:quantity key:value pairs
-    """
-    df = split_excels[nor_leucine_key][values_df]
-    return df["Area"].to_dict()
-
-
-def transpose_split_excels(split_excels: dict, args: argparse.Namespace) -> pd.DataFrame:
+def transpose_split_excels(split_excels: dict) -> pd.DataFrame:
     """@brief Transpose the split excels, as per profile
 
     @param[in]  split_excel   Dictionary with split excels, as found in previous format
-    @param[in]  args          argparse.Namespace    Parsed CLI arguments
 
     @return transposed_excel_shet     DataFrame with the contents of the transposed information sheet
     """
     transposed_sheet_dict = {}
-    get_nor_leucine(split_excels, args.nor_leucine_key)
     for metabolite, values in split_excels.items():
         df = values[values_df]
         if not df.index.name == split_value:
@@ -132,18 +132,47 @@ def transpose_split_excels(split_excels: dict, args: argparse.Namespace) -> pd.D
     return pd.DataFrame(transposed_sheet_dict)
 
 
-def insert_formulas(sheet: pd.DataFrame) -> pd.DataFrame:
+def get_formulas_sheet(
+    transposed_sheet: pd.DataFrame,
+    args: argparse.Namespace,
+    sheet_name: str = aggregates_key,
+) -> pd.DataFrame:
     """@brief Inserts the formula columns in the sheet
 
-    @param[in] sheet pandas.DataFrame object with the transposed data
+    @param[in]  transposed_sheet    The sheet with the transposed data
+    @param[in]  args                argparse.Namespace with parsed arguments result
+    @param[in]  sheet_name          The name the sheet will have in the excel
 
-    @return sheet_with_formulas The datasheet with formulas added
+    @return sheet_with_formulas A datasheet of formulas
     """
-    df = sheet
-    col = 6 * ["form"]
-    for i in range(len(df.columns), 1, -1):
-        df.insert(i, str(i), col)
-    return df
+    formulas_sheet = {}
+    df = transposed_sheet
+    # Add 1 because numbering starts from 1 for excel, and another 1 because the first row will be taken by the column
+    # names
+    nor_row = df.index.get_loc(args.nor_leucine_key) + 1 + 1
+
+    for injection in df:
+        injection_dict = formulas_sheet.setdefault(injection, {})
+        # Add 1 because the first column is taken by the metabolite names
+        injection_column = excel_columns[df.columns.get_loc(injection) + 1]
+        for metabolite in df[injection].index:
+            # As above re "+ 1 + 1"
+            metabolite_row = df[injection].index.get_loc(metabolite) + 1 + 1
+            metabolite_coordinates = templates["remote_sheet_pointer"].format(
+                sheet=sheet_name,
+                column=injection_column,
+                row=metabolite_row,
+            )
+            nor_coordinates = templates["remote_sheet_pointer"].format(
+                sheet=sheet_name,
+                column=injection_column,
+                row=nor_row,
+            )
+
+            formula = f"={metabolite_coordinates} / {nor_coordinates}"
+            injection_dict[metabolite] = formula
+
+    return pd.DataFrame(formulas_sheet)
 
 
 def save_excel(excel: dict, filename: pathlib.Path) -> None:
@@ -161,15 +190,26 @@ def main():
     @return args    Namespace with parsed arguments
     """
     args = parse_args()
+
     excel = pd.read_excel(args.filename, sheet_name=None)
+    # Since dict now behaves like OrderedDict, use placeholders
+    new_excel = {aggregates_key: None, formulas_key: None}
+    new_excel.update(excel)
+
     clean_excel = cleanup_contents(excel)
     split_excel = split_excels(clean_excel)
-    transposed_excel = transpose_split_excels(split_excel, args)
-    excel[aggregates_key] = transposed_excel
+    transposed_sheet = transpose_split_excels(split_excel)
+    new_excel[aggregates_key] = transposed_sheet
+
+    formulas_sheet = get_formulas_sheet(transposed_sheet, args)
+
+    new_excel[formulas_key] = formulas_sheet
+    new_excel.update(excel)
     if args.output:
-        save_excel(excel, args.output)
+        save_excel(new_excel, args.output)
     else:
-        print(excel[aggregates_key])
+        print(new_excel[aggregates_key])
+        print(new_excel[formulas_key])
 
 
 if __name__ == "__main__":
