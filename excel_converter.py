@@ -22,7 +22,7 @@ templates = {
 }
 
 logging_data = {
-    "format": "%(asctime)s - %(levelname)-10s - [%(filename)-15s | %(funcName)-15s | %(lineno)04d] : %(message)s",
+    "format": "%(asctime)s - %(levelname)-10s - [%(filename)-18.18s | %(funcName)-18.18s | L%(lineno)04d] : %(message)s",
     "logger_name": "excel_transpose_logger",
     "cli_level": logging.INFO,
     "file_level": logging.DEBUG,
@@ -188,7 +188,7 @@ def split_excels(excel: dict, logger: logging.Logger) -> dict:
         split_contents = {}
         split_contents[header_df] = df_1
         split_contents[values_df] = df_2
-
+        logger.info("Will cleanup results for key %s", key)
         split_excel[key] = cleanup_contents(split_contents, logger, ignore_index=False)
         logger.debug("Split values.\nOriginal DataFrame: %s\nSplit DataFrames: %s", value, split_contents)
     return split_excel
@@ -205,7 +205,7 @@ def transpose_split_excels(split_excel_data: dict, logger: logging.Logger) -> pd
     transposed_sheet_dict = {}
     logger.info("Creating the transposed object")
     for metabolite, values in split_excel_data.items():
-        logging.debug("Metabolite: %s, values: %s", metabolite, values)
+        logger.debug("Metabolite: %s, values: %s", metabolite, values)
         df = values[values_df]
         if not df.index.name == split_value:
             logger.debug("Skipping as this `metabolite` does not contain keyword %s", split_value)
@@ -213,7 +213,7 @@ def transpose_split_excels(split_excel_data: dict, logger: logging.Logger) -> pd
         for injection in df.index.values:
             area = df.loc[injection]["Area"]
             rt = df.loc[injection]["RT"]
-            logging.debug("Injection: %s, area: %s, rt: %s", injection, area, rt)
+            logger.debug("Injection: %s, area: %s, rt: %s", injection, area, rt)
 
             rts_dict = transposed_sheet_dict.setdefault("RT", {})
             areas_dict = transposed_sheet_dict.setdefault(f"{injection}_Area", {})
@@ -317,8 +317,8 @@ def main():
         logger.debug("Data to save: %s", new_excel)
         save_excel(new_excel, args.output)
     else:
-        logging.info(new_excel[aggregates_key])
-        logging.info(new_excel[formulas_key])
+        logger.info(new_excel[aggregates_key])
+        logger.info(new_excel[formulas_key])
 
 
 if __name__ == "__main__":
