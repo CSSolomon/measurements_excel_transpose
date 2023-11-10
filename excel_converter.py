@@ -317,8 +317,15 @@ def main():
         logger.debug("Data to save: %s", new_excel)
         save_excel(new_excel, args.output)
     else:
-        logger.info(new_excel[aggregates_key])
-        logger.info(new_excel[formulas_key])
+        logger.info(
+            "Printing the new sheets.\n\n%s\n%s\n%s\n\n%s\n%s\n%s",
+            aggregates_key,
+            len(aggregates_key) * "=",
+            new_excel[aggregates_key],
+            formulas_key,
+            len(formulas_key) * "=",
+            new_excel[formulas_key],
+        )
 
 
 if __name__ == "__main__":
