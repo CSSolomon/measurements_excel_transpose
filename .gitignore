@@ -2,3 +2,6 @@
 !.gitignore
 !excel_conerter.py
 !.pre-commit*.yaml
+!requirements.txt
+!Dockerfile
+!.dockerignore
