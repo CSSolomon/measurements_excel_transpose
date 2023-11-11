@@ -72,3 +72,38 @@ The log levels one can set can have a value of:
 
 It is recommended to keep CLI output in `INFO` level (default) and activate file-logging (default level: `DEBUG`) if more information is
 needed. The logfile can be found in the path from which the script was called and will be named as `<program_name without .py suffix>.log`
+
+## Calling via `Docker` image
+
+The executable also comes wrapped in a docker image, for the convenience of users. It may be called thus
+
+```sh
+FILES_FOLDER=<PATH_TO_YOUR_FILES_FOLDER>
+docker run --user $(stat ${FILES_FOLDER} -c '%u:%g') -v ${FILES_FOLDER}:/opt/excel_converter/files/ -ti constantinosstsolomonides/excel_converter:0.1.0
+```
+
+Note that the `--rm` is optional, and is used to avoid having instances taking-up space after exiting
+
+This will result in getting an interactive prompt within the container, while having user and group the same as the calling user. It *may* lead to getting a prompt that seems like a warning, as follows:
+    ```text
+    groups: cannot find name for group ID XXXX
+    I have no name!@a4aca2b6b8d8:/opt/excel_converter$
+    ```
+(`XXXX` will be a number). That is normal, and will happen because the container can't know every possible group ID, so it will complain, but will result in the output file having the right permissions. By executing the above command, the files will be found under `/opt/excel_converter/files/`, while the executable will by default be under `/opt/excel_converter/`. The `PATH` environment variable has been modified, so the script can be called with the simple use of its name: `excel_converter.py`. If file logs are being requested, it is advised to first change path into the files folder, so it survives after the container exits:
+    ```sh
+    FILES_FOLDER=<PATH_TO_YOUR_FILES_FOLDER>
+    docker run --user $(stat ${FILES_FOLDER} -c '%u:%g') -v ${FILES_FOLDER}:/opt/excel_converter/files/ -ti constantinosstsolomonides/excel_converter:0.1.0
+    I have no name!@a4aca2b6b8d8:/opt/excel_converter$ cd /opt/excel_converter/files/
+    I have no name!@d0a1ed5bba54:/opt/excel_converter/files$ excel_converter.py ...
+    ```
+It is for that reason also very important that the output file is also placed in the `/opt/excel_converter/files` folder.
+
+Another message that may appear at least once will be the following:
+    ```sh
+     $ docker run --user $(stat . -c '%u:%g') -v .:/opt/excel_converter/files/ --rm -ti constantinosstsolomonides/excel_converter:0.1.0
+     Unable to find image 'constantinosstsolomonides/excel_converter:0.1.0' locally
+     0.1.0: Pulling from constantinosstsolomonides/excel_converter
+     Digest: sha256:4a88b48c566636a7dac6848157c9a8eaf8922c6aaf347cbea0c517bdfc660b75
+     Status: Downloaded newer image for constantinosstsolomonides/excel_converter:0.1.0
+     ```
+This is also perfectly normal, it happens because the image is not available locally, so it needs to be pulled before being used.

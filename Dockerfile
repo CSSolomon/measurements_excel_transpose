@@ -11,4 +11,6 @@ RUN        apt update \
 
 FROM install_pip_environment AS implementation
 # This split allows the first part, requiring installations, to be skipped unless the installed packages change
-COPY excel_converter.py /opt/excel_converter.py
+COPY excel_converter.py /opt/excel_converter/excel_converter.py
+ENV PATH=${PATH}:/opt/excel_converter
+WORKDIR /opt/excel_converter/
