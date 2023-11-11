@@ -104,7 +104,7 @@ It is for that reason also very important that the output file is also placed in
 
 Another message that may appear at least once will be the following:
 
-``sh
+```sh
 $ docker run --user $(stat . -c '%u:%g') -v .:/opt/excel_converter/files/ --rm -ti constantinosstsolomonides/excel_converter:0.1.0
 Unable to find image 'constantinosstsolomonides/excel_converter:0.1.0' locally
 0.1.0: Pulling from constantinosstsolomonides/excel_converter
