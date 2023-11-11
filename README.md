@@ -9,7 +9,7 @@ The program has been written as an extensible solution to the needs of a specifi
 
 # Use
 
-At its core, the program may be used as simply as `${PATH}/excel_converter.py -f <input_filename> -o <output_filename>`. Keep in mind that the output filename *MUST* contain the `.xlsx` suffix. Without the `-o <output_filename>` option, the program will simply log the contents of the two sheets it generates.
+At its core, the program may be used as simply as `${PATH}/excel_converter.py -f <input_filename> -o <output_filename>`. Keep in mind that the output filename **MUST** contain the `.xlsx` suffix. Without the `-o <output_filename>` option, the program will simply log the contents of the two sheets it generates.
 
 ## Full call options
 
@@ -44,31 +44,31 @@ options:
 
 ### Input - output modifying options
 
-| Option                    | Comment                                                                   |
-| ------------------------- | ------------------------------------------------------------------------- |
-| -f / --filename           | The file to parse and extend. *must* have a well-known format             |
-| -o / --output             | The file to create with the results.                                      |
-| -l / --nor-leucine-key    | Key of the sheet containing the baseline metabolite. Defaults to `Nor`    |
+| Option                     | Comment                                                                   |
+| -------------------------- | ------------------------------------------------------------------------- |
+| `-f` / `--filename`        | The file to parse and extend. **must** have a well-known format           |
+| `-o` / `--output`          | The file to create with the results.                                      |
+| `-l` / `--nor-leucine-key` | Key of the sheet containing the baseline metabolite. Defaults to `Nor`    |
 
 ### Logging modification options
 
 | Option                    | Comment                                                                            |
 | ------------------------- | ---------------------------------------------------------------------------------- |
-| --log-level               | The global log-level to set. Does not impact activation of types of logging        |
-| --log-level-cli           | Level CLI logging will use. Activates CLI logging if set with maximum precedence   |
-| --log-level-file          | Level file logging will use. Activates file logging if set with maximum precedence |
-| --log-no-cli              | Deactivates CLI logging (on by default). No impact if CLI level is set             |
-| --log-in-file             | Activates file logging (off by default). If file level is set automatically True   |
+| `--log-level`             | The global log-level to set. Does not impact activation of types of logging        |
+| `--log-level-cli`         | Level CLI logging will use. Activates CLI logging if set with maximum precedence   |
+| `--log-level-file`        | Level file logging will use. Activates file logging if set with maximum precedence |
+| `--log-no-cli`            | Deactivates CLI logging (on by default). No impact if CLI level is set             |
+| `--log-in-file`           | Activates file logging (off by default). If file level is set automatically True   |
 
 The log levels one can set can have a value of:
 
-| Level             | Significance
-| ----------------- | ------------------------------------------------------------------------------------------------------- |
-|  10 / DEBUG       | Be very verbose. Will show intermediate steps of processing and internals of the function of the script |
-|  20 / INFO        | Be verbose a regular amount. This is the default level for most programs, including the CLI of this one |
-|  30 / WARNING     | Be silent, only showing warning or above messages. Warning means things almost failed but didn't        |
-|  40 / ERROR       | Bo very silent, only printing out messages if an error has occured                                      |
-|  50 / CRITICAL    | Be extrememly silent, only reporting catastrophic failure. This is meaningless for this software        |
+| Level              | Significance
+| ------------------ | ------------------------------------------------------------------------------------------------------- |
+|  `10` / `DEBUG`    | Be very verbose. Will show intermediate steps of processing and internals of the function of the script |
+|  `20` / `INFO`     | Be verbose a regular amount. This is the default level for most programs, including the CLI of this one |
+|  `30` / `WARNING`  | Be silent, only showing warning or above messages. Warning means things almost failed but didn't        |
+|  `40` / `ERROR`    | Be very silent, only printing out messages if an error has occured                                      |
+|  `50` / `CRITICAL` | Be extrememly silent, only reporting catastrophic failure. This is meaningless for this software        |
 
 It is recommended to keep CLI output in `INFO` level (default) and activate file-logging (default level: `DEBUG`) if more information is
 needed. The logfile can be found in the path from which the script was called and will be named as `<program_name without .py suffix>.log`
