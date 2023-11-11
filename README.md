@@ -46,7 +46,7 @@ options:
 
 | Option                     | Comment                                                                   |
 | -------------------------- | ------------------------------------------------------------------------- |
-| `-f` / `--filename`        | The file to parse and extend. **must** have a well-known format           |
+| `-f` / `--filename`        | The file to parse and extend. **Must** have a well-known format           |
 | `-o` / `--output`          | The file to create with the results.                                      |
 | `-l` / `--nor-leucine-key` | Key of the sheet containing the baseline metabolite. Defaults to `Nor`    |
 
