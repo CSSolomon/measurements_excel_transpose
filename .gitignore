@@ -1,0 +1,11 @@
+*
+!media
+!media/*
+!.gitignore
+!excel_conerter.py
+!.pre-commit*.yaml
+!requirements.txt
+!Dockerfile
+!.dockerignore
+!README.md
+!RUN_IN_WINDOWS.md
