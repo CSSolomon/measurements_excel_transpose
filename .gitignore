@@ -1,4 +1,6 @@
 *
+!media
+!media/*
 !.gitignore
 !excel_conerter.py
 !.pre-commit*.yaml
@@ -6,3 +8,4 @@
 !Dockerfile
 !.dockerignore
 !README.md
+!RUN_IN_WINDOWS.md

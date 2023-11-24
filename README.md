@@ -75,6 +75,7 @@ needed. The logfile can be found in the path from which the script was called an
 
 ## Calling via `Docker` image
 
+NOTE: For steps to run in `Docker` under MS Windows :tm: see [RUN\_IN\_WINDOWS](RUN_IN_WINDOWS.md)
 The executable also comes wrapped in a docker image, for the convenience of users. It may be called thus
 
 ```sh
