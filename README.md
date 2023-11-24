@@ -105,7 +105,7 @@ It is for that reason also very important that the output file is also placed in
 Another message that may appear at least once will be the following:
 
 ```sh
-$ docker run --user $(stat . -c '%u:%g') -v .:/opt/excel_converter/files/ --rm -ti constantinosstsolomonides/excel_converter:0.1.0
+$ docker run --entrypoint=/bin/bash --user $(stat . -c '%u:%g') -v .:/opt/excel_converter/files/ --rm -ti constantinosstsolomonides/excel_converter:0.1.0
 Unable to find image 'constantinosstsolomonides/excel_converter:0.1.0' locally
 0.1.0: Pulling from constantinosstsolomonides/excel_converter
 Digest: sha256:4a88b48c566636a7dac6848157c9a8eaf8922c6aaf347cbea0c517bdfc660b75
